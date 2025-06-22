@@ -20,18 +20,7 @@
 
 </div>
 
-## 📋 Table of Contents
-- [🎯 Overview](#-overview)
-- [🏗️ Architecture](#️-architecture)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🚀 Three-Tier Deployment Strategy](#-three-tier-deployment-strategy)
-- [📋 Prerequisites](#-prerequisites)
-- [🔧 Local Development Setup](#-local-development-setup)
-- [🔄 CI/CD Pipeline](#-cicd-pipeline)
-- [🏭 Infrastructure as Code](#-infrastructure-as-code)
-- [🔒 Security & Monitoring](#-security--monitoring)
-- [📊 Flowchart](#-flowchart)
-- [🤝 Contributing](#-contributing)
+
 
 ## 🎯 Overview
 
@@ -231,118 +220,163 @@ EKS Production Cluster:
   Auto Scaling: 2-5 nodes
 ```
 
-## 🔧 Local Development Setup
 
-### 1️⃣ **Clone and Setup Repository**
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/camp-ground.git
-cd camp-ground
-
-# Install root dependencies
-npm install
-
-# Setup git hooks
-npm run prepare
-```
-
-### 2️⃣ **Backend Configuration**
-```bash
-cd backend
-npm install
-
-# Create environment file
-cp .env.example .env
-```
-
-**Backend Environment Variables (.env)**:
-```env
-# Server Configuration
-NODE_ENV=development
-PORT=5000
-API_VERSION=v1
-
-# Database
-MONGODB_URI=mongodb://localhost:27017/campground_dev
-REDIS_URL=redis://localhost:6379
-
-# Authentication
-JWT_SECRET=your_super_secure_jwt_secret_key_here
-JWT_EXPIRE=30d
-JWT_REFRESH_EXPIRE=7d
-
-# File Upload (AWS S3)
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-AWS_REGION=us-west-2
-S3_BUCKET_NAME=campground-uploads-dev
-
-# Email Service (SendGrid)
-SENDGRID_API_KEY=your_sendgrid_api_key
-FROM_EMAIL=noreply@campground.com
-
-# External APIs
-MAPBOX_API_KEY=your_mapbox_api_key
-WEATHER_API_KEY=your_weather_api_key
-```
-
-### 3️⃣ **Frontend Configuration**
-```bash
-cd ../frontend
-npm install
-
-# Create environment file
-cp .env.example .env
-```
-
-**Frontend Environment Variables (.env)**:
-```env
-# API Configuration
-REACT_APP_API_URL=http://localhost:5000/api/v1
-REACT_APP_SOCKET_URL=http://localhost:5000
-
-# External Services
-REACT_APP_MAPBOX_TOKEN=your_mapbox_token
-REACT_APP_GOOGLE_ANALYTICS=your_ga_tracking_id
-
-# Feature Flags
-REACT_APP_ENABLE_ANALYTICS=true
-REACT_APP_ENABLE_CHAT=true
-```
-
-### 4️⃣ **Database Setup**
-```bash
-# Start MongoDB and Redis with Docker Compose
-docker-compose -f docker-compose.dev.yml up -d
-
-# Or install locally
-# MongoDB
-brew install mongodb/brew/mongodb-community
-brew services start mongodb/brew/mongodb-community
-
-# Redis
-brew install redis
-brew services start redis
-```
-
-### 5️⃣ **Start Development Servers**
-```bash
-# Terminal 1: Backend
-cd backend
-npm run dev
-
-# Terminal 2: Frontend
-cd frontend
-npm start
-
-# Terminal 3: Watch for changes (optional)
-npm run dev:watch
-```
 
 ### 🌐 **Access Points**
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000/api/v1
 - **API Documentation**: http://localhost:5000/api-docs
 - **GraphQL Playground**: http://localhost:5000/graphql
+
+
+
+graph TB
+    %% Developer Workflow
+    DEV[👨‍💻 Developer] --> GIT[📁 GitHub Repository]
+    GIT --> |Push to develop| JENKINS[🔧 Jenkins<br/>Port 8080]
+    GIT --> |PR to main| JENKINS
+    GIT --> |Merge to main| JENKINS
+
+    %% Development Environment
+    subgraph DEV_ENV[🛠️ Development Environment]
+        EC2_DEV[🖥️ EC2 Instance<br/>t3.medium]
+        MONGO_DEV[🗄️ MongoDB Local]
+        
+        EC2_DEV --> MONGO_DEV
+    end
+
+    %% CI/CD Infrastructure
+    subgraph CICD_INFRA[🏗️ CI/CD Infrastructure]
+        EC2_JENKINS[🖥️ EC2 Instance<br/>t3.large]
+        JENKINS
+        SONAR[📊 SonarQube<br/>Port 9000]
+        
+        EC2_JENKINS --> JENKINS
+        EC2_JENKINS --> SONAR
+    end
+
+    %% Pipeline 1 - Staging
+    subgraph PIPELINE1[🔄 Pipeline 1: Staging]
+        P1_CHECKOUT[📥 Checkout Code]
+        P1_DEPS[📦 Install Dependencies]
+        P1_TEST[🧪 Run Tests<br/>Coverage: 80%+]
+        P1_SONAR[📊 SonarQube Analysis<br/>Quality Gates]
+        P1_SECURITY[🔒 Security Scan<br/>OWASP + npm audit]
+        P1_BUILD[🐳 Build Docker Images]
+        P1_TRIVY[🛡️ Trivy Security Scan<br/>HIGH/CRITICAL]
+        P1_DEPLOY_STAGING[🚀 Deploy to Staging]
+        
+        P1_CHECKOUT --> P1_DEPS
+        P1_DEPS --> P1_TEST
+        P1_TEST --> P1_SONAR
+        P1_SONAR --> P1_SECURITY
+        P1_SECURITY --> P1_BUILD
+        P1_BUILD --> P1_TRIVY
+        P1_TRIVY --> P1_DEPLOY_STAGING
+    end
+
+    %% Pipeline 2 - Production
+    subgraph PIPELINE2[🔄 Pipeline 2: Production]
+        P2_VALIDATE[✅ Pre-deployment Validation]
+        P2_SECURITY[🔐 Final Security Check]
+        P2_BUILD[🏗️ Production Build]
+        P2_APPROVAL[👥 Manual Approval<br/>DevOps Lead + PO]
+        P2_DEPLOY[🌐 Blue-Green Deploy<br/>Zero Downtime]
+        P2_HEALTH[🔍 Health Checks]
+        P2_NOTIFY[📧 Email Notification]
+        
+        P2_VALIDATE --> P2_SECURITY
+        P2_SECURITY --> P2_BUILD
+        P2_BUILD --> P2_APPROVAL
+        P2_APPROVAL --> P2_DEPLOY
+        P2_DEPLOY --> P2_HEALTH
+        P2_HEALTH --> P2_NOTIFY
+    end
+
+    %% Staging Environment
+    subgraph STAGING_ENV[🧪 Staging Environment]
+        EKS_STAGING[☸️ EKS Cluster<br/>2 x t3.small nodes]
+        MONGO_ATLAS_STAGING[🗄️ MongoDB Atlas<br/>M10 Cluster]
+        
+        subgraph STAGING_PODS[Staging Pods]
+            BACKEND_STAGING[🔧 Backend Pod<br/>campground-backend]
+            FRONTEND_STAGING[🎨 Frontend Pod<br/>campground-frontend]
+        end
+        
+        EKS_STAGING --> STAGING_PODS
+        BACKEND_STAGING --> MONGO_ATLAS_STAGING
+    end
+
+    %% Production Environment
+    subgraph PROD_ENV[🏭 Production Environment]
+        EKS_PROD[☸️ EKS Cluster<br/>3 x t3.medium nodes<br/>Auto Scaling: 2-5]
+        MONGO_ATLAS_PROD[🗄️ MongoDB Atlas<br/>M30 Cluster + Replica Sets]
+        
+        subgraph PROD_PODS[Production Pods]
+            BACKEND_PROD[🔧 Backend Pods<br/>3 replicas]
+            FRONTEND_PROD[🎨 Frontend Pods<br/>2 replicas]
+        end
+        
+        subgraph PROD_SERVICES[Production Services]
+            ALB[🔗 AWS Load Balancer]
+            CLOUDFRONT[🌐 CloudFront CDN]
+            ACM[🔒 SSL Certificate<br/>AWS Certificate Manager]
+        end
+        
+        EKS_PROD --> PROD_PODS
+        BACKEND_PROD --> MONGO_ATLAS_PROD
+        CLOUDFRONT --> ALB
+        ALB --> FRONTEND_PROD
+        ALB --> BACKEND_PROD
+        ACM --> ALB
+    end
+
+    %% External Services
+    subgraph EXTERNAL[🌐 External Services]
+        USERS[👥 End Users]
+        ECR[📦 AWS ECR<br/>Container Registry]
+    end
+
+    %% Connections
+    JENKINS --> PIPELINE1
+    JENKINS --> PIPELINE2
+    
+    PIPELINE1 --> STAGING_ENV
+    PIPELINE2 --> PROD_ENV
+    
+    P1_BUILD --> ECR
+    P2_BUILD --> ECR
+    ECR --> EKS_STAGING
+    ECR --> EKS_PROD
+    
+    USERS --> CLOUDFRONT
+    
+    %% Styling
+    classDef devEnv fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef stagingEnv fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef prodEnv fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef cicdEnv fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef external fill:#fafafa,stroke:#424242,stroke-width:2px
+    
+    class DEV_ENV devEnv
+    class STAGING_ENV stagingEnv
+    class PROD_ENV prodEnv
+    class CICD_INFRA,PIPELINE1,PIPELINE2 cicdEnv
+    class EXTERNAL external
+
+
+
+
+**⭐ If you found this project helpful, please give it a star! ⭐**
+
+![GitHub stars](https://img.shields.io/github/stars/yourusername/camp-ground?style=social)
+![GitHub forks](https://img.shields.io/github/forks/yourusername/camp-ground?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/yourusername/camp-ground?style=social)
+
+Made with ❤️ by [Your Name](https://github.com/yourusername)
+
+</div>
+
+
 
 
