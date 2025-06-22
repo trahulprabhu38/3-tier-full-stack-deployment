@@ -163,139 +163,69 @@ Development → Staging → Production
 ## 🏗️ DevOps Architecture & CI/CD Pipeline
 
 ```mermaid
-graph TB
-    %% Developer Workflow
-    DEV[👨‍💻 Developer] --> GIT[📁 GitHub Repository]
-    GIT --> |Push to develop| JENKINS[🔧 Jenkins<br/>Port 8080]
-    GIT --> |PR to main| JENKINS
-    GIT --> |Merge to main| JENKINS
+---
+config:
+  layout: dagre
+---
 
-    %% Development Environment
-    subgraph DEV_ENV[🛠️ Development Environment]
-        EC2_DEV[🖥️ EC2 Instance<br/>t3.medium]
-        MONGO_DEV[🗄️ MongoDB Local]
-        
-        EC2_DEV --> MONGO_DEV
+flowchart TD
+    %% 🎯 Dev Stage
+    subgraph DEV_STAGE["🛠️ Dev Stage"]
+        DEV["👨‍💻 Developer<br/>EC2 (t3.medium)"]
+        GIT["📁 GitHub Repo"]
+        DEV --> GIT
     end
 
-    %% CI/CD Infrastructure
-    subgraph CICD_INFRA[🏗️ CI/CD Infrastructure]
-        EC2_JENKINS[🖥️ EC2 Instance<br/>t3.large]
-        JENKINS
-        SONAR[📊 SonarQube<br/>Port 9000]
-        
-        EC2_JENKINS --> JENKINS
-        EC2_JENKINS --> SONAR
+    %% 🧱 CI/CD Core
+    subgraph CICD["🧰 CI/CD Infrastructure"]
+        JENKINS["🛠️ Jenkins<br/>EC2 (t3.large)"]
+        SONAR["📊 SonarQube"]
+        TRIVY["🛡️ Trivy - Image Scan"]
+        GIT --> JENKINS
+        JENKINS --> SONAR
+        JENKINS --> TRIVY
     end
 
-    %% Pipeline 1 - Staging
-    subgraph PIPELINE1[🔄 Pipeline 1: Staging]
-        P1_CHECKOUT[📥 Checkout Code]
-        P1_DEPS[📦 Install Dependencies]
-        P1_TEST[🧪 Run Tests<br/>Coverage: 80%+]
-        P1_SONAR[📊 SonarQube Analysis<br/>Quality Gates]
-        P1_SECURITY[🔒 Security Scan<br/>OWASP + npm audit]
-        P1_BUILD[🐳 Build Docker Images]
-        P1_TRIVY[🛡️ Trivy Security Scan<br/>HIGH/CRITICAL]
-        P1_DEPLOY_STAGING[🚀 Deploy to Staging]
+    %% 🧪 Staging Environment
+    subgraph STAGE_ENV["🧪 Staging Environment"]
+        STAGE_PIPE["🔁 Jenkins: Staging Pipeline"]
+        ECR["📦 Push to ECR"]
+        EKS_STAGE["☸️ EKS Cluster (Staging)"]
+        STAGE_FE["🎨 Frontend Pod"]
+        STAGE_BE["🔧 Backend Pod"]
+        MONGO_STAGE["🗄️ MongoDB Atlas<br/>M10"]
         
-        P1_CHECKOUT --> P1_DEPS
-        P1_DEPS --> P1_TEST
-        P1_TEST --> P1_SONAR
-        P1_SONAR --> P1_SECURITY
-        P1_SECURITY --> P1_BUILD
-        P1_BUILD --> P1_TRIVY
-        P1_TRIVY --> P1_DEPLOY_STAGING
+        STAGE_PIPE --> ECR
+        STAGE_PIPE --> EKS_STAGE
+        EKS_STAGE --> STAGE_FE
+        EKS_STAGE --> STAGE_BE
+        STAGE_BE --> MONGO_STAGE
     end
 
-    %% Pipeline 2 - Production
-    subgraph PIPELINE2[🔄 Pipeline 2: Production]
-        P2_VALIDATE[✅ Pre-deployment Validation]
-        P2_SECURITY[🔐 Final Security Check]
-        P2_BUILD[🏗️ Production Build]
-        P2_APPROVAL[👥 Manual Approval<br/>DevOps Lead + PO]
-        P2_DEPLOY[🌐 Blue-Green Deploy<br/>Zero Downtime]
-        P2_HEALTH[🔍 Health Checks]
-        P2_NOTIFY[📧 Email Notification]
-        
-        P2_VALIDATE --> P2_SECURITY
-        P2_SECURITY --> P2_BUILD
-        P2_BUILD --> P2_APPROVAL
-        P2_APPROVAL --> P2_DEPLOY
-        P2_DEPLOY --> P2_HEALTH
-        P2_HEALTH --> P2_NOTIFY
+    %% 🚀 Production Environment
+    subgraph PROD_ENV["🏭 Production Environment"]
+        PROD_PIPE["🚀 Jenkins: Production Pipeline"]
+        PROD_DEPLOY["🌐 Deploy to EKS Prod (Manual Approval)"]
+        EKS_PROD["☸️ EKS Cluster (Prod)<br/>3x t3.medium"]
+        PROD_FE["🎨 Frontend Pods x2"]
+        PROD_BE["🔧 Backend Pods x3"]
+        MONGO_PROD["🗄️ MongoDB Atlas<br/>M30 RS"]
+        ALB["🔗 AWS ALB"]
+
+
+        PROD_PIPE --> PROD_DEPLOY
+        PROD_DEPLOY --> EKS_PROD
+        EKS_PROD --> PROD_FE
+        EKS_PROD --> PROD_BE
+        PROD_FE --> ALB
+        PROD_BE --> ALB
+        PROD_BE --> MONGO_PROD
     end
 
-    %% Staging Environment
-    subgraph STAGING_ENV[🧪 Staging Environment]
-        EKS_STAGING[☸️ EKS Cluster<br/>2 x t3.small nodes]
-        MONGO_ATLAS_STAGING[🗄️ MongoDB Atlas<br/>M10 Cluster]
-        
-        subgraph STAGING_PODS[Staging Pods]
-            BACKEND_STAGING[🔧 Backend Pod<br/>campground-backend]
-            FRONTEND_STAGING[🎨 Frontend Pod<br/>campground-frontend]
-        end
-        
-        EKS_STAGING --> STAGING_PODS
-        BACKEND_STAGING --> MONGO_ATLAS_STAGING
+    %% 📦 Master Architecture Block
+    subgraph ARCH["📦 Three-Tier CI/CD Architecture"]
+        DEV_STAGE --> CICD --> STAGE_ENV --> PROD_ENV
     end
-
-    %% Production Environment
-    subgraph PROD_ENV[🏭 Production Environment]
-        EKS_PROD[☸️ EKS Cluster<br/>3 x t3.medium nodes<br/>Auto Scaling: 2-5]
-        MONGO_ATLAS_PROD[🗄️ MongoDB Atlas<br/>M30 Cluster + Replica Sets]
-        
-        subgraph PROD_PODS[Production Pods]
-            BACKEND_PROD[🔧 Backend Pods<br/>3 replicas]
-            FRONTEND_PROD[🎨 Frontend Pods<br/>2 replicas]
-        end
-        
-        subgraph PROD_SERVICES[Production Services]
-            ALB[🔗 AWS Load Balancer]
-            CLOUDFRONT[🌐 CloudFront CDN]
-            ACM[🔒 SSL Certificate<br/>AWS Certificate Manager]
-        end
-        
-        EKS_PROD --> PROD_PODS
-        BACKEND_PROD --> MONGO_ATLAS_PROD
-        CLOUDFRONT --> ALB
-        ALB --> FRONTEND_PROD
-        ALB --> BACKEND_PROD
-        ACM --> ALB
-    end
-
-    %% External Services
-    subgraph EXTERNAL[🌐 External Services]
-        USERS[👥 End Users]
-        ECR[📦 AWS ECR<br/>Container Registry]
-    end
-
-    %% Connections
-    JENKINS --> PIPELINE1
-    JENKINS --> PIPELINE2
-    
-    PIPELINE1 --> STAGING_ENV
-    PIPELINE2 --> PROD_ENV
-    
-    P1_BUILD --> ECR
-    P2_BUILD --> ECR
-    ECR --> EKS_STAGING
-    ECR --> EKS_PROD
-    
-    USERS --> CLOUDFRONT
-    
-    %% Styling
-    classDef devEnv fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef stagingEnv fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef prodEnv fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    classDef cicdEnv fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef external fill:#fafafa,stroke:#424242,stroke-width:2px
-    
-    class DEV_ENV devEnv
-    class STAGING_ENV stagingEnv
-    class PROD_ENV prodEnv
-    class CICD_INFRA,PIPELINE1,PIPELINE2 cicdEnv
-    class EXTERNAL external
 ```
 
 ## 📋 Prerequisites
@@ -350,3 +280,10 @@ EKS Production Cluster:
   Node Count: 3
   Auto Scaling: 2-5 nodes
 ```
+
+
+
+
+
+
+
