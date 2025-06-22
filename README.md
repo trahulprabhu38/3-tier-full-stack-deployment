@@ -20,8 +20,6 @@
 
 </div>
 
-
-
 ## 🎯 Overview
 
 **Camp Ground** is a modern, enterprise-grade full-stack web application that enables users to discover, add, and review camping sites. Built with a robust three-tier architecture and deployed using cloud-native DevOps practices, it demonstrates real-world deployment strategies across Development, Staging, and Production environments on Amazon EKS.
@@ -77,13 +75,11 @@
 
 <div align="center">
 
-### **Frontend Technologies**
+### **Fullstack Technologies**
 ![React](https://img.shields.io/badge/react-v18.2.0-61DAFB?style=flat-square&logo=react)
 ![TypeScript](https://img.shields.io/badge/typescript-v4.9.4-3178C6?style=flat-square&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/tailwindcss-v3.2.4-06B6D4?style=flat-square&logo=tailwindcss)
 ![Vite](https://img.shields.io/badge/vite-v4.0.0-646CFF?style=flat-square&logo=vite)
-
-### **Backend Technologies**
 ![Node.js](https://img.shields.io/badge/node.js-v18.12.1-339933?style=flat-square&logo=node.js)
 ![Express](https://img.shields.io/badge/express-v4.18.2-000000?style=flat-square&logo=express)
 ![MongoDB](https://img.shields.io/badge/mongodb-v6.0-47A248?style=flat-square&logo=mongodb)
@@ -94,11 +90,8 @@
 ![Docker](https://img.shields.io/badge/docker-v20.10-2496ED?style=flat-square&logo=docker)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-v1.28-326CE5?style=flat-square&logo=kubernetes)
 ![Jenkins](https://img.shields.io/badge/jenkins-v2.414-D24939?style=flat-square&logo=jenkins)
-
-### **Code Quality & Security**
 ![SonarQube](https://img.shields.io/badge/sonarqube-v9.8-4E9BCD?style=flat-square&logo=sonarqube)
 ![Trivy](https://img.shields.io/badge/trivy-security%20scanner-1904DA?style=flat-square&logo=aqua)
-![OWASP](https://img.shields.io/badge/OWASP-ZAP-000000?style=flat-square&logo=owasp)
 
 </div>
 
@@ -167,69 +160,9 @@ Development → Staging → Production
           on PR merge   Required
 ```
 
-## 📋 Prerequisites
+## 🏗️ DevOps Architecture & CI/CD Pipeline
 
-### 🛠️ **Required Software**
-```bash
-# Core Development Tools
-Node.js >= 18.0.0
-npm >= 8.0.0
-Git >= 2.30.0
-Docker >= 20.10.0
-Docker Compose >= 2.0.0
-
-# AWS Tools
-AWS CLI v2
-eksctl >= 0.147.0
-kubectl >= 1.28.0
-helm >= 3.12.0
-
-# Optional but Recommended
-k9s (Kubernetes CLI)
-lens (Kubernetes IDE)
-```
-
-### ☁️ **AWS Prerequisites**
-- AWS Account with billing enabled
-- IAM user with programmatic access
-- Required IAM permissions for EKS, EC2, S3, and CloudFormation
-- AWS CLI configured with credentials
-
-### 🏗️ **Infrastructure Requirements**
-```yaml
-Development EC2:
-  Instance Type: t3.medium
-  OS: Amazon Linux 2
-  Storage: 30GB gp3
-  Security Group: SSH (22), HTTP (3000, 5000)
-
-Jenkins/SonarQube EC2:
-  Instance Type: t3.large
-  OS: Amazon Linux 2
-  Storage: 50GB gp3
-  Security Group: SSH (22), HTTP (8080, 9000)
-
-EKS Staging Cluster:
-  Node Type: t3.small
-  Node Count: 2
-  Auto Scaling: 1-3 nodes
-
-EKS Production Cluster:
-  Node Type: t3.medium
-  Node Count: 3
-  Auto Scaling: 2-5 nodes
-```
-
-
-
-### 🌐 **Access Points**
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000/api/v1
-- **API Documentation**: http://localhost:5000/api-docs
-- **GraphQL Playground**: http://localhost:5000/graphql
-
-
-
+```mermaid
 graph TB
     %% Developer Workflow
     DEV[👨‍💻 Developer] --> GIT[📁 GitHub Repository]
@@ -363,20 +296,57 @@ graph TB
     class PROD_ENV prodEnv
     class CICD_INFRA,PIPELINE1,PIPELINE2 cicdEnv
     class EXTERNAL external
+```
 
+## 📋 Prerequisites
 
+### 🛠️ **Required Software**
+```bash
+# Core Development Tools
+Node.js >= 18.0.0
+npm >= 8.0.0
+Git >= 2.30.0
+Docker >= 20.10.0
+Docker Compose >= 2.0.0
 
+# AWS Tools
+AWS CLI v2
+eksctl >= 0.147.0
+kubectl >= 1.28.0
+helm >= 3.12.0
 
-**⭐ If you found this project helpful, please give it a star! ⭐**
+# Optional but Recommended
+k9s (Kubernetes CLI)
+lens (Kubernetes IDE)
+```
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/camp-ground?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/camp-ground?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/yourusername/camp-ground?style=social)
+### ☁️ **AWS Prerequisites**
+- AWS Account with billing enabled
+- IAM user with programmatic access
+- Required IAM permissions for EKS, EC2, S3, and CloudFormation
+- AWS CLI configured with credentials
 
-Made with ❤️ by [Your Name](https://github.com/yourusername)
+### 🏗️ **Infrastructure Requirements**
+```yaml
+Development EC2:
+  Instance Type: t3.medium
+  OS: Amazon Linux 2
+  Storage: 30GB gp3
+  Security Group: SSH (22), HTTP (3000, 5000)
 
-</div>
+Jenkins/SonarQube EC2:
+  Instance Type: t3.large
+  OS: Amazon Linux 2
+  Storage: 50GB gp3
+  Security Group: SSH (22), HTTP (8080, 9000)
 
+EKS Staging Cluster:
+  Node Type: t3.small
+  Node Count: 2
+  Auto Scaling: 1-3 nodes
 
-
-
+EKS Production Cluster:
+  Node Type: t3.medium
+  Node Count: 3
+  Auto Scaling: 2-5 nodes
+```
